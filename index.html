@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ápice · Salón de motos · concesionario virtual</title>
+<meta name="description" content="Tu salón de motos abierto las 24 horas: entra, recorre el salón y mira cada moto como si estuvieras enfrente. Demo de 16 Ball Creations para concesionarios independientes de motos de alta gama.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ápice · Salón de motos · concesionario virtual">
+<meta property="og:description" content="Tu salón abierto las 24 horas, cada moto vista como en persona y los contactos directo a tus asesores. Demo de 16 Ball Creations.">
+<meta property="og:image" content="media/entrada/f000.webp">
+<meta property="og:locale" content="es_CO">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Gantari:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/estilos.css?v=202611111720">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/",
+  "@sparkjsdev/spark": "https://cdn.jsdelivr.net/npm/@sparkjsdev/spark@2.4.0/dist/spark.module.js"
+} }
+</script>
+</head>
+<body>
+
+<header class="barra">
+  <img class="barra__logo" src="media/marca/apice-logo-blanco.svg" alt="Ápice" data-marca-logo>
+  <span class="barra__nota">Concesionario virtual · demo de 16 Ball Creations</span>
+</header>
+
+<main>
+  <section class="entrada" id="entrada" aria-label="Entrada al concesionario">
+    <div class="escena">
+      <canvas class="escena__lienzo" id="lienzo" aria-hidden="true"></canvas>
+      <div class="escena__velo" id="velo"></div>
+
+      <img class="letrero" id="letrero" src="media/marca/apice-logo-blanco.svg" alt="" data-marca-logo>
+
+      <div class="intro" id="intro">
+        <p class="intro__marca"><span data-marca="nombre">Ápice</span> · <span data-marca="descriptor">Salón de motos</span></p>
+        <h1 class="intro__titulo">La moto que buscas<br>te está esperando adentro.</h1>
+        <p class="intro__texto">La puerta está abierta a toda hora. Entra, recorre el salón y mírala de cerca, como si estuvieras aquí.</p>
+        <button class="boton" id="entrar" type="button">Entrar</button>
+        <p class="intro__pista"><span class="raton" aria-hidden="true"></span>o baja para cruzar la puerta</p>
+      </div>
+
+      <div class="salon" id="salon" aria-hidden="true">
+        <div class="salon__encabezado">
+          <p class="salon__eyebrow">El salón</p>
+          <h2 class="salon__titulo">Elige la tuya.</h2>
+          <p class="salon__texto">Toca una moto para conocerla.</p>
+        </div>
+        <div class="motos" id="motos"></div>
+
+        <!-- En el teléfono el salón no cabe a lo ancho: la cámara recorre las motos una por una -->
+        <div class="recorrido" id="recorrido" hidden inert>
+          <button class="recorrido__flecha" id="recorrido-antes" type="button" aria-label="Moto anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="recorrido__info" aria-live="polite">
+            <b id="recorrido-nombre"></b>
+            <span id="recorrido-familia"></span>
+            <div class="recorrido__puntos" id="recorrido-puntos" aria-hidden="true"></div>
+          </div>
+          <button class="recorrido__flecha" id="recorrido-despues" type="button" aria-label="Moto siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+          <div class="recorrido__acciones">
+            <button class="ficha__accion" id="recorrido-detalle" type="button">Verla a detalle</button>
+            <button class="recorrido__asesor" id="recorrido-asesor" type="button" data-asesor="">Hablar con un asesor</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cargando" id="cargando">
+        <img src="media/marca/apice-logo-blanco.svg" alt="" data-marca-logo>
+        <div class="cargando__barra"><span id="cargando-avance"></span></div>
+      </div>
+
+      <div class="progreso" aria-hidden="true"><span id="progreso"></span></div>
+    </div>
+  </section>
+
+  <!-- La moto a detalle: se abre desde la ficha del salón -->
+  <section class="detalle" id="detalle" aria-label="Moto a detalle" hidden>
+    <div class="detalle__escenario">
+      <canvas class="detalle__lienzo" id="giro" aria-label="Fotos de la moto girando. Arrastra para girarla."></canvas>
+      <p class="cargando-splat" id="cargando-splat" hidden>Cargando la moto en 3D…</p>
+      <div class="puntos" id="puntos"></div>
+      <div class="tarjeta" id="tarjeta" role="button" tabindex="0" aria-label="Ver la pieza en grande" hidden>
+        <img class="tarjeta__icono" id="tarjeta-icono" src="" alt="">
+        <div><b id="tarjeta-titulo"></b><p id="tarjeta-texto"></p><span class="tarjeta__ampliar">Ver en grande ↗</span></div>
+      </div>
+
+      <!-- Ficha técnica completa: la llena js/detalle.js con js/motos-datos.js -->
+      <div class="ficha-tecnica" id="ficha-tecnica" hidden>
+        <div class="ficha-tecnica__barra"><button class="volver" id="cerrar-ficha" type="button">← Volver a la moto</button><span id="ficha-barra-titulo">Ficha técnica</span></div>
+        <div class="ficha-tecnica__descarga">
+          <p>El plano técnico en una hoja carta, listo para imprimir o compartir.</p>
+          <a class="boton boton--linea" id="pdf-plano" href="media/plano/450rr-plano-tecnico.pdf" download="KOVE-450RR-plano-tecnico.pdf">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg>Descargar PDF
+          </a>
+        </div>
+        <article class="lamina" id="lamina" aria-label="Plano técnico"></article>
+
+        <div class="ficha-tecnica__datos">
+          <h4 class="ficha-tecnica__h">Todos los datos</h4>
+          <div class="pestanas" role="tablist" aria-label="Secciones de la ficha técnica" id="pestanas"></div>
+          <dl class="tabla" id="tabla-ficha"></dl>
+          <p class="ficha-tecnica__nota" id="ficha-nota"></p>
+        </div>
+      </div>
+      <button class="ver-puntos" id="ver-puntos" type="button" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="ojo" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle class="ojo" cx="12" cy="12" r="3"/><path class="tachado" d="M4 4l16 16"/></svg>
+        <span>Ocultar detalles</span>
+      </button>
+      <p class="pista-giro" id="pista-giro"><span aria-hidden="true">⟲</span> Arrastra para girarla</p>
+      <div class="angulo" aria-hidden="true"><span id="angulo-aguja"></span></div>
+
+      <!-- Vista del piloto: el puesto de mando con la foto oficial del tablero -->
+      <div class="modo-vista" role="group" aria-label="Cómo ver la moto">
+        <button type="button" data-vista="giro" aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4"/></svg>360°</button>
+        <button type="button" data-vista="piloto" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M3.5 10h6.7M13.8 10h6.7M12 14v7"/></svg>Piloto</button>
+      </div>
+      <figure class="piloto" id="piloto" hidden>
+        <img id="piloto-img" src="" alt="">
+        <figcaption>
+          <span class="piloto__eyebrow">Desde el puesto de mando</span>
+          <b id="piloto-titulo"></b>
+          <p id="piloto-texto"></p>
+          <a id="piloto-fuente" href="" target="_blank" rel="noopener"></a>
+        </figcaption>
+      </figure>
+    </div>
+
+    <aside class="detalle__panel">
+      <button class="volver" id="volver" type="button">← Volver al salón</button>
+      <p class="detalle__eyebrow" id="detalle-eyebrow"></p>
+      <h2 class="detalle__titulo" id="detalle-titulo"></h2>
+      <p class="detalle__precio">Desde <b id="detalle-precio"></b> <span>Precio de referencia. No incluye matrícula, placas ni SOAT.</span></p>
+      <dl class="datos" id="detalle-datos"></dl>
+      <div class="colores" role="radiogroup" aria-labelledby="t-colores">
+        <p class="colores__titulo" id="t-colores">Color <b id="color-nombre">Negro</b></p>
+        <div class="colores__opciones" id="colores-opciones"></div>
+        <p class="colores__nota" id="color-nota" role="status"></p>
+      </div>
+      <p class="detalle__nota">Toca los puntos sobre la moto para conocer cada pieza.</p>
+      <div class="detalle__acciones">
+        <button class="boton boton--linea" type="button" id="ver-ficha" aria-expanded="false">Ficha técnica completa</button>
+        <button class="boton boton--linea" type="button" id="ver-contexto">Por qué elegirla</button>
+        <button class="boton boton--ar" type="button" id="ver-3d" data-modelo="450rr">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l8 4.5v10l-8 4.5-8-4.5V7z"/><path d="M4 7l8 4.5L20 7M12 11.5V21"/></svg>
+          Verla en tu espacio</button>
+      </div>
+      <!-- Barra de compra: siempre a la vista al fondo del panel -->
+      <div class="compra">
+        <button class="boton compra__cotizar" type="button" id="abrir-cotizar">Cotizar<span> y simular cuotas</span></button>
+        <button class="boton boton--linea" type="button" id="abrir-prueba">Prueba<span> de manejo</span></button>
+        <button class="boton boton--linea" type="button" id="ver-sedes">Visítanos</button>
+        <button class="compra__asesor" type="button" id="detalle-asesor" data-asesor="450RR">o habla con un asesor</button>
+      </div>
+    </aside>
+  </section>
+
+  <!-- Visítanos: la sede del concesionario (en la demo, una dirección de ejemplo) -->
+  <section class="concesionarios" id="concesionarios" aria-labelledby="t-concesionarios">
+    <div class="concesionarios__panel">
+      <p class="salon__eyebrow">Visítanos</p>
+      <h2 id="t-concesionarios">Ven a sentirla en persona</h2>
+      <p class="concesionarios__texto">Ya la viste de cerca. Cuando quieras sentarte en ella, oír el motor y conversar con calma, te esperamos en Laureles, donde las calles arboladas y el café de la esquina ya saben a ruta.</p>
+      <ul class="sedes" id="sedes"></ul>
+      <p class="sedes__fuente">Demo: la dirección, el teléfono y el pin del mapa son de ejemplo. En la versión final van los de tu concesionario.</p>
+    </div>
+    <div class="concesionarios__mapa" id="mapa" aria-label="Mapa con la ubicación de ejemplo del salón"></div>
+  </section>
+
+  <!-- Para concesionarios: qué muestra esta demo y qué construye 16 Ball Creations -->
+  <section class="despues" id="propuesta" aria-labelledby="t-propuesta">
+    <div class="despues__interior">
+      <div class="propuesta__intro">
+        <div>
+          <p class="salon__eyebrow">Para concesionarios independientes</p>
+          <h2 id="t-propuesta">Tu salón, abierto las 24 horas.</h2>
+        </div>
+        <p class="propuesta__lede">Quien busca una moto de alta gama la sueña mucho antes de entrar a la vitrina: de noche, en el teléfono, comparando.
+          Este concesionario virtual le deja cruzar tu puerta a la hora que sea, caminar entre las motos y mirar cada una como si la tuviera enfrente.
+          Y cuando se decide, la conversación llega directo a tus asesores.</p>
+      </div>
+
+      <ul class="cifras" aria-label="Lo que gana tu concesionario">
+        <li><b>24/7</b><span>tu salón abierto, también cuando la vitrina está cerrada</span></li>
+        <li><b>360°</b><span>cada moto se gira y se mira de cerca, pieza por pieza</span></li>
+        <li><b>1 toque</b><span>del interés al WhatsApp de tu asesor, con la moto ya mencionada</span></li>
+        <li><b>Multimarca</b><span>nuevas, usadas o de exhibición, de la marca que sea, en el mismo salón</span></li>
+      </ul>
+
+      <h3 class="propuesta__sub">Lo que muestra esta demo</h3>
+      <ol class="pasos">
+        <li><div><b>Entrada y salón.</b> Se baja y se cruza la puerta: adentro, las motos esperan sobre su pedestal. Es la emoción de llegar a la tienda, sin salir de casa.</div></li>
+        <li><div><b>La moto como en persona.</b> La BMW K 1300 R de la demo es una moto real capturada en 3D: se gira, se acerca y se mira desde cualquier ángulo. La KOVE 450RR gira con sus fotos y muestra sus piezas.</div></li>
+        <li><div><b>Ficha y plano técnico.</b> Los datos que pregunta el que sabe, en una sección aparte, con medidas sobre el plano y el PDF a un toque.</div></li>
+        <li><div><b>Cotizar sin formularios.</b> Cuando la moto tiene precio publicado, la cuota mensual se simula al instante y la cotización llega armada al asesor. Las unidades de exhibición o usadas muestran «precio a consultar».</div></li>
+        <li><div><b>Asesor y prueba de manejo.</b> WhatsApp, videollamada o cita en el salón, siempre a la mano y con la moto ya nombrada en el mensaje.</div></li>
+        <li><div><b>Visítanos.</b> La sede con su horario y cómo llegar, para que la visita sea el cierre y no el primer contacto.</div></li>
+      </ol>
+
+      <h3 class="propuesta__sub">Lo que 16 Ball Creations construye para tu concesionario</h3>
+      <ul class="respaldo">
+        <li><b>Tu marca y tu fachada</b><span>La entrada se hace a partir de tu local, con tu nombre en el letrero.</span></li>
+        <li><b>Tu inventario, moto por moto</b><span>Capturamos en 3D las motos que tienes en piso, de cualquier marca, nuevas o usadas.</span></li>
+        <li><b>Contactos directo a tu equipo</b><span>WhatsApp, videollamada y agenda de pruebas de manejo conectados con tus asesores.</span></li>
+        <li><b>Un salón que cambia contigo</b><span>Cuando una moto se vende, sale del salón; cuando llega otra, entra.</span></li>
+      </ul>
+
+      <p class="firma">Demostración de <a href="https://16ballcreations.com/proyectos/" target="_blank" rel="noopener">16 Ball Creations</a>. <span data-marca="nombre">Ápice</span> es un concesionario ficticio: el nombre, la dirección y los asesores son de ejemplo.
+        No está afiliada a KOVE ni a BMW; sus marcas solo identifican las motos que se muestran.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="pie__interior">
+    <div class="pie__marca">
+      <img src="media/marca/apice-logo-blanco.svg" alt="Ápice" class="pie__logo" data-marca-logo>
+      <p class="pie__lema" data-marca="lema">Cada curva tiene su punto exacto.</p>
+      <p class="pie__importa">Concesionario independiente · multimarca</p>
+    </div>
+    <nav class="pie__col" aria-label="Navegación">
+      <h3>Navegación</h3>
+      <ul>
+        <li><a href="#entrada">El salón</a></li>
+        <li><a href="#concesionarios">Visítanos</a></li>
+        <li><a href="#propuesta">Para concesionarios</a></li>
+      </ul>
+    </nav>
+    <div class="pie__col">
+      <h3>Horario del salón</h3>
+      <p class="pie__dir">Lunes a viernes de 9:00 a 19:00<br>Sábados de 9:00 a 18:00<br>Domingos y festivos de 10:00 a 16:00, con cita<br>Dirección de ejemplo · Laureles, <span data-marca="ciudad">Medellín</span></p>
+    </div>
+    <div class="pie__col">
+      <h3>¿Ya elegiste la tuya?</h3>
+      <button class="boton pie__reserva" type="button" data-asesor="">Hablar con un asesor</button>
+      <ul class="redes" aria-label="Contacto">
+        <li><button type="button" data-asesor="" aria-label="Escríbenos por WhatsApp"><svg viewBox="0 0 24 24"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19.1z"/><path d="M9 9.5c.5 2 2.5 4 4.5 4.5l1.2-1.2 1.8.8v1.6c-4.5.5-8.6-3.6-8.1-8.1h1.6l.8 1.8z"/></svg></button></li>
+      </ul>
+    </div>
+  </div>
+  <div class="pie__base">
+    <p>© 2026 <span data-marca="nombre">Ápice</span> · concesionario de demostración, ficticio</p>
+    <p>Demo de <a href="https://16ballcreations.com/proyectos/" target="_blank" rel="noopener">16 Ball Creations</a>, no afiliada a KOVE ni a BMW. Las marcas solo identifican las motos que se muestran; sus logos y fotos oficiales son de sus dueños.</p>
+  </div>
+</footer>
+
+<!-- Hablar con un asesor: siempre a mano desde el salón -->
+<!-- Por qué elegirla: argumentos de la marca con fotos oficiales -->
+<dialog class="contexto" id="contexto" aria-labelledby="contexto-titulo">
+  <div class="contexto__barra">
+    <button class="volver" type="button" id="cerrar-contexto">← Volver a la moto</button>
+    <span>Por qué elegirla</span>
+  </div>
+  <div class="contexto__cuerpo">
+    <header class="contexto__cabeza">
+      <p class="contexto__eyebrow" id="contexto-eyebrow"></p>
+      <h2 id="contexto-titulo"></h2>
+    </header>
+    <div class="contexto__grilla" id="contexto-grilla"></div>
+    <p class="contexto__nota">Fotos y datos publicados por cada fabricante y por medios especializados; cada tarjeta enlaza su fuente. Demo de 16 Ball Creations, no afiliada a KOVE ni a BMW.</p>
+  </div>
+</dialog>
+
+<!-- Cotizar: resumen de lo elegido, simulador de cuotas a la vista y enlace para compartir -->
+<dialog class="cotizar" id="cotizar" aria-labelledby="cotizar-titulo">
+  <div class="cotizar__barra">
+    <button class="volver" type="button" id="cerrar-cotizar">← Volver a la moto</button>
+    <span>Tu cotización</span>
+  </div>
+  <div class="cotizar__cuerpo">
+    <section class="resumen" aria-label="Lo que elegiste">
+      <img class="resumen__foto" id="resumen-foto" src="" alt="">
+      <div class="resumen__cabeza">
+        <p class="detalle__eyebrow" id="resumen-eyebrow"></p>
+        <h2 id="cotizar-titulo"></h2>
+        <p class="resumen__color"><i id="resumen-muestra"></i>Color <b id="resumen-color"></b></p>
+      </div>
+      <dl class="resumen__precios">
+        <div><dt>Precio de referencia</dt><dd id="r-precio"></dd></div>
+        <div><dt>Bono por reservar en línea</dt><dd id="r-bono"></dd></div>
+        <div class="resumen__total"><dt>Precio reservando en línea</dt><dd id="r-total"></dd></div>
+      </dl>
+      <p class="nota-legal">Precios de referencia en pesos colombianos. No incluyen matrícula, placas ni SOAT.
+        En la demo, el bono por reservar en línea es de ejemplo: en la versión final, cada concesionario define el suyo y su vigencia.</p>
+    </section>
+
+    <section class="simulador" aria-labelledby="t-simulador">
+      <h3 id="t-simulador">Simula tu cuota</h3>
+      <label class="simulador__campo" for="s-inicial">
+        <span>Cuota inicial <output id="s-inicial-v" for="s-inicial"></output></span>
+        <input type="range" id="s-inicial" min="10" max="80" step="5" value="30">
+      </label>
+      <fieldset class="simulador__plazos">
+        <legend>Plazo</legend>
+        <label><input type="radio" name="plazo" value="12"><span>12</span></label>
+        <label><input type="radio" name="plazo" value="24"><span>24</span></label>
+        <label><input type="radio" name="plazo" value="36" checked><span>36</span></label>
+        <label><input type="radio" name="plazo" value="48"><span>48</span></label>
+        <label><input type="radio" name="plazo" value="60"><span>60</span></label>
+        <small>meses</small>
+      </fieldset>
+      <label class="simulador__bono"><input type="checkbox" id="s-bono" checked> Reservo en línea y aplico el bono</label>
+      <div class="simulador__resultado" role="status">
+        <span>Cuota mensual estimada</span>
+        <b id="s-cuota"></b>
+        <small id="s-detalle"></small>
+      </div>
+      <p class="nota-legal">Cálculo ilustrativo con una tasa de 1,8 % mes vencido (23,9 % efectivo anual) y cuotas fijas. No incluye seguros ni otros cargos.
+        La tasa, el plazo y la aprobación los define la entidad financiera después del estudio de crédito.</p>
+    </section>
+
+    <div class="cotizar__acciones">
+      <button class="boton" type="button" id="enviar-cotizacion" data-asesor="">Enviar a un asesor</button>
+      <button class="boton boton--linea" type="button" id="compartir">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>
+        Compartir esta cotización</button>
+      <button class="reservar" type="button" id="separar" data-asesor="">Quiero separarla</button>
+      <p class="cotizar__estado" id="cotizar-estado" role="status"></p>
+    </div>
+  </div>
+</dialog>
+
+<!-- Prueba de manejo: vitrina y momento; la sede confirma día y hora -->
+<dialog class="asesor prueba" id="prueba" aria-labelledby="prueba-titulo">
+  <form method="dialog" class="asesor__cerrar"><button type="submit" aria-label="Cerrar">×</button></form>
+  <p class="detalle__eyebrow">Prueba de manejo</p>
+  <h2 id="prueba-titulo">Manéjala antes de decidir</h2>
+  <form class="prueba__form" id="prueba-form">
+    <fieldset>
+      <legend>Dónde</legend>
+      <div class="prueba__sedes" id="prueba-sedes"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Cuándo te queda mejor</legend>
+      <div class="prueba__franjas">
+        <label><input type="radio" name="franja" value="entre semana en la mañana" checked><span>Entre semana, mañana</span></label>
+        <label><input type="radio" name="franja" value="entre semana en la tarde"><span>Entre semana, tarde</span></label>
+        <label><input type="radio" name="franja" value="un sábado"><span>Sábado</span></label>
+      </div>
+    </fieldset>
+    <p class="prueba__requisito">Lleva tu licencia de conducción A2 vigente y tu casco. El salón te confirma el día y la hora.</p>
+    <button class="boton" type="submit">Pedir mi prueba</button>
+  </form>
+  <p class="asesor__demo" id="prueba-demo" role="status">Demo: en la versión final se piden nombre y celular, y la solicitud llega al concesionario.</p>
+</dialog>
+
+<!-- Visor 3D y realidad aumentada -->
+<dialog class="visor3d" id="visor3d" aria-labelledby="visor3d-titulo">
+  <div class="visor3d__barra">
+    <button class="volver" type="button" id="cerrar-3d">← Volver a la moto</button>
+    <h2 id="visor3d-titulo">450RR en 3D</h2>
+  </div>
+  <div class="visor3d__escena" id="visor3d-escena">
+    <p class="visor3d__cargando" id="visor3d-cargando">Cargando la moto en 3D…</p>
+  </div>
+  <div class="visor3d__pie">
+    <div class="visor3d__ar" id="visor3d-ar" hidden>
+      <button class="boton" type="button" id="activar-ar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M12 7l5 2.8v5.4L12 18l-5-2.8V9.8z"/></svg>
+        Ponerla en mi piso</button>
+      <p>Se abre la cámara: apunta al piso, espera a que aparezca la moto a tamaño real y camina alrededor.</p>
+    </div>
+    <div class="visor3d__qr" id="visor3d-qr" hidden>
+      <div class="visor3d__codigo" id="visor3d-codigo" aria-hidden="true"></div>
+      <p><b>Mírala en tu espacio.</b> Escanea el código con la cámara de tu teléfono: la 450RR aparece a tamaño real (2.015 mm) en el piso de tu casa.</p>
+    </div>
+    <p class="visor3d__nota">Arrastra para girarla y pellizca para acercarte. Modelo 3D de demostración generado con IA a partir de una foto oficial; en la versión final se hace con el escaneo de la moto real.</p>
+  </div>
+</dialog>
+
+<button class="asesor-flotante" id="asesor-flotante" type="button" data-asesor="">
+  <span class="asesor-flotante__punto" aria-hidden="true"></span>Hablar con un asesor
+</button>
+
+<dialog class="asesor" id="asesor" aria-labelledby="asesor-titulo">
+  <form method="dialog" class="asesor__cerrar"><button type="submit" aria-label="Cerrar">×</button></form>
+  <p class="detalle__eyebrow">Asesores en línea</p>
+  <h2 id="asesor-titulo">Habla con alguien del equipo</h2>
+  <p class="asesor__texto" id="asesor-texto">Una persona del salón te resuelve dudas, te cotiza y agenda tu prueba de manejo.</p>
+  <ul class="asesor__opciones">
+    <li><button type="button" data-canal="WhatsApp"><b>Escribir por WhatsApp</b><span>Respuesta en minutos, en horario del salón</span></button></li>
+    <li><button type="button" data-canal="Videollamada"><b>Videollamada desde el salón</b><span>Un asesor te muestra la moto en vivo</span></button></li>
+    <li><button type="button" data-canal="Visita"><b>Agendar una visita al salón</b><span>Con la moto lista para que la veas y te sientes en ella</span></button></li>
+  </ul>
+  <p class="asesor__demo" id="asesor-demo" role="status">Demo: en la versión final cada opción abre el canal real del concesionario.</p>
+</dialog>
+
+<dialog class="ampliar" id="ampliar" aria-labelledby="ampliar-titulo">
+  <form method="dialog" class="asesor__cerrar"><button type="submit" aria-label="Cerrar">×</button></form>
+  <img id="ampliar-img" src="" alt="">
+  <div class="ampliar__pie"><b id="ampliar-titulo"></b><p id="ampliar-texto"></p></div>
+</dialog>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/marca.js?v=202611111600"></script>
+<script src="js/motos-datos.js?v=202611111720"></script>
+<script src="js/entrada.js?v=202611111720"></script>
+<script src="js/visor3d.js?v=202611102130"></script>
+<script src="js/detalle.js?v=202611111720"></script>
+<script src="js/compra.js?v=202611111200"></script>
+<script src="js/asesor.js?v=202611111200"></script>
+<script src="js/concesionarios.js?v=202611111545"></script>
+</body>
+</html>

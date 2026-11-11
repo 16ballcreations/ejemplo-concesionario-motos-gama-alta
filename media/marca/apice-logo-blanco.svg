@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 228 72" role="img" aria-label="Ápice">
+  <!-- Ápice: logotipo de demostración del concesionario. La A es el vértice de una curva (sin travesaño). -->
+  <g fill="#FFFFFF">
+    <!-- Á: chevrón del ápice -->
+    <polygon points="2,68 26,12 50,68 43.4,68 26,27.4 8.6,68"/>
+  </g>
+  <!-- La tilde es el acento de la marca: oro champaña -->
+  <polygon fill="#C9A96E" points="31,8.5 39.5,0 44,0 35.5,8.5"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="butt" stroke-linejoin="miter">
+    <!-- P -->
+    <path d="M70 68V21H90a12.5 12.5 0 0 1 0 25H70"/>
+    <!-- I -->
+    <path d="M122 18V68"/>
+    <!-- C -->
+    <path d="M178.6 28.6A22 22 0 1 0 178.6 57.4"/>
+    <!-- E -->
+    <path d="M224 21H200V65H224M200 43H220"/>
+  </g>
+</svg>
