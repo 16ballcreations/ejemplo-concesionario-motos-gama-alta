@@ -973,3 +973,8 @@ body.salon-en-pantalla:has(.salon--recorrido) .asesor-flotante { opacity: 0; poi
 .pie__lema { line-height: 1.25; }
 /* En el teléfono, «Unidad de exhibición · precio a consultar» cabe en dos renglones en vez de cortarse */
 .recorrido__info > span { white-space: normal; text-wrap: balance; line-height: 1.35; }
+
+/* Realidad aumentada con el splat (js/ar-splat.js): capa sobre la cámara */
+.ar-capa { position: fixed; inset: 0; pointer-events: none; font-family: inherit; }
+.ar-capa__salir { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 14px; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--oro, #c9a96e); background: rgba(6, 9, 8, .72); color: #f6f5f0; font: 600 14px/1 inherit; }
+.ar-capa__texto { position: absolute; left: 16px; right: 16px; bottom: calc(28px + env(safe-area-inset-bottom)); margin: 0; padding: 12px 16px; border-radius: 14px; background: rgba(6, 9, 8, .72); color: #f6f5f0; font-size: 15px; line-height: 1.35; text-align: center; }

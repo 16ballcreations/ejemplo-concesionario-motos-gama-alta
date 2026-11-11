@@ -7,7 +7,7 @@
     '450rr': { nombre: '450RR', src: 'media/3d/450rr.glb', orbita: '35deg 78deg auto', largo: '2.015 mm',
       nota: 'Arrastra para girarla y pellizca para acercarte. Modelo 3D de demostración generado con IA a partir de una foto oficial; en la versión final se hace con el escaneo de la moto real.' },
     // BMW K 1300 R: malla de fotogrametría (RealityScan) con el tanque alisado y la placa tapada; frente hacia +Z
-    'k1300r': { nombre: 'K 1300 R', src: 'media/3d/k1300r.glb?v=1', orbita: '35deg 75deg auto', largo: '2.228 mm',
+    'k1300r': { nombre: 'K 1300 R', src: 'media/3d/k1300r.glb?v=1', orbita: '35deg 75deg auto', largo: '2.228 mm', splatAr: true,
       nota: 'Arrastra para girarla y pellizca para acercarte. Es la moto real de la sala, escaneada con fotogrametría a partir de un video: así se ve en tu espacio.' },
   };
   const MV = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
@@ -32,6 +32,7 @@
   async function preparar(id) {
     const m = MODELOS[id];
     abiertoId = id;
+    prepararArSplat(id);
     $('#visor3d-titulo').textContent = m.nombre + ' en 3D';
     $('#visor3d-qr-texto').innerHTML = `<b>Mírala en tu espacio.</b> Escanea el código con la cámara de tu teléfono: la ${m.nombre} aparece a tamaño real (${m.largo}) en el piso de tu casa.`;
     $('#visor3d-nota').textContent = m.nota;
@@ -96,7 +97,26 @@
   // tocar el fondo oscuro también cierra
   dialogo.addEventListener('click', (e) => { if (e.target === dialogo) cerrar(); });
   $('#cerrar-3d').addEventListener('click', cerrar);
-  $('#activar-ar').addEventListener('click', () => { if (visor) visor.activateAR(); });
+  // AR con el splat (WebXR, Chrome para Android) para las motos que lo tienen; si no hay soporte, AR nativo con la malla
+  let arSplat = null, arSplatOk = false;
+  async function prepararArSplat(id) {
+    arSplatOk = false;
+    const datos = (window.KOVE_MOTOS || {})[id];
+    if (!MODELOS[id].splatAr || !datos || !datos.giro || datos.giro.tipo !== 'splat') return;
+    try {
+      arSplat = arSplat || await import('./ar-splat.js?v=202611111900');
+      arSplatOk = await arSplat.soportado();
+    } catch { arSplatOk = false; }
+    if (arSplatOk) { bloqueAr.hidden = false; bloqueQr.hidden = true; }
+  }
+  $('#activar-ar').addEventListener('click', () => {
+    const datos = (window.KOVE_MOTOS || {})[abiertoId];
+    if (arSplatOk && datos) {
+      arSplat.iniciar(datos.giro).catch(() => { if (visor && visor.canActivateAR) visor.activateAR(); });
+      return;
+    }
+    if (visor) visor.activateAR();
+  });
 
   document.querySelectorAll('[data-modelo]').forEach((b) =>
     b.addEventListener('click', () => abrir(b.dataset.modelo, b)));
