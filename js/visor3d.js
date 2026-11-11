@@ -7,7 +7,7 @@
     '450rr': { nombre: '450RR', src: 'media/3d/450rr.glb', orbita: '35deg 78deg auto', largo: '2.015 mm',
       nota: 'Arrastra para girarla y pellizca para acercarte. Modelo 3D de demostración generado con IA a partir de una foto oficial; en la versión final se hace con el escaneo de la moto real.' },
     // BMW K 1300 R: malla de fotogrametría (RealityScan) con el tanque alisado y la placa tapada; frente hacia +Z
-    'k1300r': { nombre: 'K 1300 R', src: 'media/3d/k1300r.glb?v=1', orbita: '35deg 75deg auto', largo: '2.228 mm', splatAr: true,
+    'k1300r': { nombre: 'K 1300 R', src: 'media/3d/k1300r.glb?v=2', orbita: '35deg 75deg auto', largo: '2.228 mm', splatAr: false,   // el splat completo es muy pesado para AR en teléfono: AR nativo con la malla
       nota: 'Arrastra para girarla y pellizca para acercarte. Es la moto real de la sala, escaneada con fotogrametría a partir de un video: así se ve en tu espacio.' },
   };
   const MV = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
