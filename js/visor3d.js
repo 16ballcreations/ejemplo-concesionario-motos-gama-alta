@@ -4,7 +4,11 @@
 // En el computador: código QR que abre este mismo visor en el teléfono.
 (() => {
   const MODELOS = {
-    '450rr': { nombre: '450RR', src: 'media/3d/450rr.glb', orbita: '35deg 78deg auto' },
+    '450rr': { nombre: '450RR', src: 'media/3d/450rr.glb', orbita: '35deg 78deg auto', largo: '2.015 mm',
+      nota: 'Arrastra para girarla y pellizca para acercarte. Modelo 3D de demostración generado con IA a partir de una foto oficial; en la versión final se hace con el escaneo de la moto real.' },
+    // BMW K 1300 R: malla de fotogrametría (RealityScan) con el tanque alisado y la placa tapada; frente hacia +Z
+    'k1300r': { nombre: 'K 1300 R', src: 'media/3d/k1300r.glb?v=1', orbita: '35deg 75deg auto', largo: '2.228 mm',
+      nota: 'Arrastra para girarla y pellizca para acercarte. Es la moto real de la sala, escaneada con fotogrametría a partir de un video: así se ve en tu espacio.' },
   };
   const MV = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
   const QR = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
@@ -16,7 +20,7 @@
   const cargando = $('#visor3d-cargando');
   const bloqueAr = $('#visor3d-ar');
   const bloqueQr = $('#visor3d-qr');
-  let visor = null, origen = null;
+  let visor = null, origen = null, abiertoId = '450rr';
 
   const cargarScript = (src, modulo) => new Promise((ok, mal) => {
     const s = document.createElement('script');
@@ -27,7 +31,10 @@
 
   async function preparar(id) {
     const m = MODELOS[id];
+    abiertoId = id;
     $('#visor3d-titulo').textContent = m.nombre + ' en 3D';
+    $('#visor3d-qr-texto').innerHTML = `<b>Mírala en tu espacio.</b> Escanea el código con la cámara de tu teléfono: la ${m.nombre} aparece a tamaño real (${m.largo}) en el piso de tu casa.`;
+    $('#visor3d-nota').textContent = m.nota;
     if (!customElements.get('model-viewer')) await cargarScript(MV, true);
     await customElements.whenDefined('model-viewer');
     if (!visor) {
@@ -62,7 +69,8 @@
       try {
         if (!window.qrcode) await cargarScript(QR);
         const q = window.qrcode(0, 'M');
-        q.addData(location.href.split('#')[0] + ANCLA);
+        const u = new URL(location.href.split('#')[0]); u.searchParams.set('moto', abiertoId);
+        q.addData(u.href + ANCLA);
         q.make();
         $('#visor3d-codigo').innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
       } catch { bloqueQr.hidden = true; }
@@ -96,8 +104,10 @@
   // Llegada desde el código QR: abrir el detalle y el visor
   if (location.hash === ANCLA) {
     window.addEventListener('load', () => {
-      document.dispatchEvent(new CustomEvent('kove:detalle', { detail: { id: '450rr' } }));
-      setTimeout(() => abrir('450rr', $('#ver-3d')), 400);
+      const id = new URLSearchParams(location.search).get('moto');
+      const cual = MODELOS[id] ? id : '450rr';
+      document.dispatchEvent(new CustomEvent('kove:detalle', { detail: { id: cual } }));
+      setTimeout(() => abrir(cual, $('#ver-3d')), 400);
     });
   }
 

@@ -719,7 +719,7 @@ window.KOVE_MOTOS = {
     "c": "#22356e"
    }
   ],
-  "modelo3d": false,
+  "modelo3d": true,
   "giro": {
    "tipo": "splat",
    "src": "media/splat/k1300r.spz",
