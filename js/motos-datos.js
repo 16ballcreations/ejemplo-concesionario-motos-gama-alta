@@ -723,7 +723,7 @@ window.KOVE_MOTOS = {
   "giro": {
    "tipo": "splat",
    "src": "media/splat/k1300r.spz?v=2",
-   "srcMovil": "media/splat/k1300r-movil.spz?v=2",
+   "srcMovil": "media/splat/k1300r-movil.spz?v=3",
    "matriz": [
     0.058968,
     0.001131,
