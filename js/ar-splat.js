@@ -3,6 +3,7 @@
 // Otro toque la mueve. En iPhone (sin WebXR AR) se usa el AR nativo con la malla (js/visor3d.js).
 import * as THREE from 'three';
 import { SplatMesh, SparkRenderer } from '@sparkjsdev/spark';
+import { urlSplat } from './visor-splat.js?v=202611112000';
 
 export async function soportado() {
   try { return !!(navigator.xr && await navigator.xr.isSessionSupported('immersive-ar')); }
@@ -10,6 +11,8 @@ export async function soportado() {
 }
 
 export async function iniciar(giro, textos = {}) {
+  // el detalle suelta su propio splat para que el teléfono tenga memoria para este
+  document.dispatchEvent(new CustomEvent('ar:inicio'));
   // Capa sobre la cámara: instrucciones y botón para salir (dom-overlay)
   const capa = document.createElement('div');
   capa.className = 'ar-capa';
@@ -38,7 +41,7 @@ export async function iniciar(giro, textos = {}) {
 
   // La moto: grupo que se pone en el piso; adentro, el splat con su matriz (metros, piso en y = 0, frente a −Z)
   const moto = new THREE.Group(); moto.visible = false;
-  const splat = new SplatMesh({ url: giro.src });
+  const splat = new SplatMesh({ url: urlSplat(giro) });
   if (giro.matriz) { splat.matrixAutoUpdate = false; splat.matrix.fromArray(giro.matriz); }
   moto.add(splat);
   // Sombra de contacto: elipse oscura y difusa bajo la moto
@@ -52,9 +55,12 @@ export async function iniciar(giro, textos = {}) {
     .catch(() => { texto.textContent = 'No se pudo cargar la moto.'; });
   texto.textContent = 'Cargando la moto…';
 
-  const sesion = await navigator.xr.requestSession('immersive-ar', {
-    requiredFeatures: ['hit-test'], optionalFeatures: ['dom-overlay', 'local-floor'], domOverlay: { root: capa },
-  });
+  let sesion;
+  try {
+    sesion = await navigator.xr.requestSession('immersive-ar', {
+      requiredFeatures: ['hit-test'], optionalFeatures: ['dom-overlay', 'local-floor'], domOverlay: { root: capa },
+    });
+  } catch (e) { cerrar(); throw e; }
   await renderer.xr.setSession(sesion);
   const espacioVista = await sesion.requestReferenceSpace('viewer');
   const fuente = await sesion.requestHitTestSource({ space: espacioVista });
@@ -91,8 +97,14 @@ export async function iniciar(giro, textos = {}) {
   await new Promise((fin) => sesion.addEventListener('end', fin));
   renderer.setAnimationLoop(null);
   fuente.cancel?.();
-  splat.dispose?.(); renderer.dispose();
-  capa.remove();
+  cerrar();
+
+  function cerrar() {
+    splat.dispose?.(); renderer.dispose();
+    try { renderer.forceContextLoss(); } catch { /* ya perdido */ }
+    capa.remove();
+    document.dispatchEvent(new CustomEvent('ar:fin'));
+  }
 }
 
 function sombraTextura() {

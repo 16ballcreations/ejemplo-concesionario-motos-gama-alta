@@ -104,7 +104,7 @@
     const datos = (window.KOVE_MOTOS || {})[id];
     if (!MODELOS[id].splatAr || !datos || !datos.giro || datos.giro.tipo !== 'splat') return;
     try {
-      arSplat = arSplat || await import('./ar-splat.js?v=202611111900');
+      arSplat = arSplat || await import('./ar-splat.js?v=202611112000');
       arSplatOk = await arSplat.soportado();
     } catch { arSplatOk = false; }
     if (arSplatOk) { bloqueAr.hidden = false; bloqueQr.hidden = true; }

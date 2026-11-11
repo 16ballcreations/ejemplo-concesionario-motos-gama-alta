@@ -5,10 +5,17 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { SplatMesh, SparkRenderer } from '@sparkjsdev/spark';
 
+// En teléfonos (pantalla táctil) se usa la versión liviana del splat: menos memoria de GPU y menos descarga
+export const esMovil = () => window.matchMedia('(pointer: coarse)').matches;
+export const urlSplat = (giro) => (esMovil() && giro.srcMovil ? giro.srcMovil : giro.src);
+
 export function crear(lienzo, giro, avisos = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas: lienzo, antialias: false, alpha: true, preserveDrawingBuffer: false });
+  let activo = true;
   renderer.setClearColor(0x000000, 0);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, esMovil() ? 1.5 : 2));
+  // si el teléfono tira el contexto gráfico (memoria, AR, segundo plano), se avisa para montar un lienzo nuevo
+  lienzo.addEventListener('webglcontextlost', (e) => { e.preventDefault(); activo = false; avisos.perdido && avisos.perdido(); }, { once: true });
   const escena = new THREE.Scene();
   escena.add(new SparkRenderer({ renderer }));
   const camara = new THREE.PerspectiveCamera(30, 1, 0.05, 50);
@@ -31,12 +38,12 @@ export function crear(lienzo, giro, avisos = {}) {
   camara.position.set(Math.sin(azInicial) * dist, (giro.centroY ?? 0.55) + dist * 0.28, Math.cos(azInicial) * dist);
   controles.update();
 
-  const moto = new SplatMesh({ url: giro.src });
+  const moto = new SplatMesh({ url: urlSplat(giro) });
   if (giro.matriz) { moto.matrixAutoUpdate = false; moto.matrix.fromArray(giro.matriz); }
   escena.add(moto);
   moto.initialized.then(() => avisos.listo && avisos.listo()).catch((e) => avisos.error && avisos.error(e));
 
-  let tocado = false, activo = true;
+  let tocado = false;
   const tocar = () => { if (!tocado) { tocado = true; controles.autoRotate = false; avisos.tocado && avisos.tocado(); } };
   controles.addEventListener('start', tocar);
 
@@ -92,6 +99,7 @@ export function crear(lienzo, giro, avisos = {}) {
     destruir() {
       activo = false; obs.disconnect(); renderer.setAnimationLoop(null);
       controles.dispose(); moto.dispose?.(); renderer.dispose();
+      try { renderer.forceContextLoss(); } catch { /* ya perdido */ }
     },
   };
 }

@@ -91,7 +91,8 @@
   // ---- Moto en splat (Gaussian splatting): lienzo WebGL propio, se carga solo al abrirla ----
   let lienzoSplat = null, visorSplat = null, splatDe = null, anguloSplat = 45;
   async function montarSplat() {
-    if (!lienzoSplat) {
+    if (!lienzoSplat || lienzoSplat.dataset.perdido) {
+      if (lienzoSplat) lienzoSplat.remove();
       lienzoSplat = document.createElement('canvas');
       lienzoSplat.className = 'detalle__lienzo detalle__lienzo--splat';
       lienzoSplat.setAttribute('aria-label', 'Moto en 3D. Arrastra para girarla, pellizca para acercarla.');
@@ -104,18 +105,30 @@
     const cargandoSplat = $('#cargando-splat');
     if (cargandoSplat) cargandoSplat.hidden = false;
     try {
-      const { crear } = await import('./visor-splat.js?v=202611111720');
+      const { crear } = await import('./visor-splat.js?v=202611112000');
       if (splatDe !== id) return;
       visorSplat = crear(lienzoSplat, m.giro, {
         listo: () => { if (cargandoSplat) cargandoSplat.hidden = true; },
         error: () => { if (cargandoSplat) cargandoSplat.textContent = 'No se pudo cargar la moto en 3D.'; },
         tocado: () => pista.classList.add('oculta'),
+        perdido: () => { reiniciarSplat(); },
         angulo: (a) => { anguloSplat = a; aguja.style.transform = `rotate(${a}deg)`; if (lienzoSplat.clientWidth !== caja.dw || lienzoSplat.clientHeight !== caja.dh) medir(); else colocar(); },
       });
     } catch {
       if (cargandoSplat) cargandoSplat.textContent = 'No se pudo cargar el visor 3D. Revisa tu conexión.';
     }
   }
+  // El teléfono puede tirar el contexto gráfico (falta de memoria, AR, app en segundo plano): lienzo nuevo y se vuelve a cargar
+  function reiniciarSplat() {
+    if (visorSplat) { visorSplat.destruir(); visorSplat = null; }
+    splatDe = null;
+    if (lienzoSplat) lienzoSplat.dataset.perdido = '1';
+    if (abierta && esSplat()) setTimeout(() => { if (abierta && esSplat()) montarSplat(); }, 400);
+  }
+  document.addEventListener('ar:inicio', () => {
+    if (visorSplat) { visorSplat.destruir(); visorSplat = null; splatDe = null; if (lienzoSplat) lienzoSplat.dataset.perdido = '1'; }
+  });
+  document.addEventListener('ar:fin', () => { if (abierta && esSplat()) setTimeout(montarSplat, 300); });
   function soltarSplat() {
     if (lienzoSplat) lienzoSplat.hidden = true;
     lienzo.hidden = false;

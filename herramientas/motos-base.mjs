@@ -91,7 +91,7 @@ export const BASE = {
     datos: [['Motor', '4 cilindros · 1.293 cc'], ['Potencia', '173 HP a 9.250 rpm'], ['Torque', '140 Nm a 8.250 rpm'], ['Peso', '243 kg en orden de marcha']],
     colores: [{ nombre: 'Azul, blanco y rojo', c: '#22356e' }],
     modelo3d: true,
-    giro: { tipo: 'splat', src: 'media/splat/k1300r.spz', matriz: [0.058968,0.001131,-0.025415,0,0.000767,-0.064208,-0.001076,0,-0.025428,0.000684,-0.058969,0,0.202824,-0.045808,-0.173819,1], inicio: 50, centroY: 0.55, distancia: 4.6 },
+    giro: { tipo: 'splat', src: 'media/splat/k1300r.spz?v=2', srcMovil: 'media/splat/k1300r-movil.spz?v=2', matriz: [0.058968,0.001131,-0.025415,0,0.000767,-0.064208,-0.001076,0,-0.025428,0.000684,-0.058969,0,0.202824,-0.045808,-0.173819,1], inicio: 50, centroY: 0.55, distancia: 4.6 },
     // Fotos de las piezas: recortes de los videos del dueño (sin placa a la vista).
     // p3 = punto de la pieza en metros, en el marco de la moto: origen en el piso bajo el centro, Y arriba,
     // el largo sobre Z con la rueda delantera hacia −Z (eje delantero ≈ z −0,79, trasero ≈ z +0,79) y +X al lado derecho (el del escape).
